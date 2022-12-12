@@ -35,11 +35,14 @@ void *receiveMessage(void *socket)
         while ((ret = read(sockfd, buffer, BUF_SIZE)) > 0)
         {
             printf("%s", buffer);
+            printf("Please enter the message: ");
+
         }
         if (ret < 0){
             printf("Error receiving data!\n");}
         else{
             printf("Closing connection\n");}
+            break;
 
     }
 }
@@ -67,25 +70,27 @@ int main(int argc, char *argv[])
     if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
         error("ERROR on binding");
     printf("Binding done...\n");
-    printf("Waiting for a connection...\n");
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
     // prompt user for username
     printf("Enter username: ");
     bzero(username, 256);        // clear the buffer
     fgets(username, 255, stdin); // get username from user
+    printf("Waiting for a connection...\n");
     int length = strlen(username);
     while (newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen)) // accept connection from client
     {
         inet_ntop(AF_INET, &(cli_addr.sin_addr), clientAddr, CLADDR_LEN);
         printf("Connection accepted from %s...\n", clientAddr);
-        while(1){
         // creating a new thread for receiving messages from the client
         if (ret = pthread_create(&rThread, NULL, receiveMessage, (void *)newsockfd))
         {
             printf("ERROR: Return Code from pthread_create() is %d\n", ret);
             error("ERROR creating thread");
         }
+        // prompt user for message without breaking the connection 
+        else if()
+
         printf("Please enter the message: ");
         bzero(buffer, 256);
         fgets(buffer, 255, stdin);
@@ -104,7 +109,6 @@ int main(int argc, char *argv[])
         if (n < 0)
             error("ERROR writing to socket");
         bzero(buffer, 256);
-        }
     }
 
     //        close(newsockfd);
