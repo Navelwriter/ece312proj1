@@ -29,7 +29,7 @@
             error("ERROR writing to socket");
 
         while ((ret = read(sockfd, buffer, BUF_SIZE)) > 0) {
-            printf("client: %s", buffer);
+            printf("%s", buffer);
         }
         if (ret < 0) 
             printf("Error receiving data!\n");
@@ -41,7 +41,7 @@
     int main(int argc, char *argv[])
     {
         int sockfd, newsockfd, portno, clilen;
-        char buffer[BUF_SIZE];
+        char buffer[BUF_SIZE], username[BUF_SIZE];
         struct sockaddr_in serv_addr, cli_addr;
         pid_t childpid;
         char clientAddr[CLADDR_LEN];
@@ -61,7 +61,9 @@
         if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
             error("ERROR on binding");
         printf("Binding done...\n");
-
+        //prompt user for username 
+        printf("Enter username: ");
+        scanf("%s", username);
         printf("Waiting for a connection...\n");
         listen(sockfd,5);
         clilen = sizeof(cli_addr);

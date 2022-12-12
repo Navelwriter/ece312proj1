@@ -3,6 +3,7 @@
    #include <sys/socket.h>
    #include <netinet/in.h>
    #include <netdb.h> 
+   #include <string.h>
 
    void error(char *msg)
    {
@@ -15,7 +16,7 @@
      int sockfd, portno, n;
      struct sockaddr_in serv_addr;
      struct hostent *server;
-     char buffer[256];
+     char buffer[256], username[256], message[256];
      if (argc < 3) {
         fprintf(stderr,"usage %s hostname port\n", argv[0]);
         exit(0);
@@ -37,10 +38,19 @@
      serv_addr.sin_port = htons(portno);
      if (connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0) 
          error("ERROR connecting");
+     printf("Enter username: ");
+     bzero(username,256); 
+     fgets(username,255,stdin);
      printf("Please enter the message: ");
-     bzero(buffer,256);
+     bzero(buffer,256); 
      fgets(buffer,255,stdin);
-     n = write(sockfd,buffer,strlen(buffer));
+     int length = strlen(username);
+     //make message buffer a combination of username and message in the format "username: message" in the same line
+     strcpy(message, username);
+     message[length-1] = ':';
+     message[length] = ' ';
+     strcpy(message+length+1, buffer);
+     n = write(sockfd,message,strlen(message));
      if (n < 0) 
           error("ERROR writing to socket");
      bzero(buffer,256);
