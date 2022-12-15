@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
     if (newsockfd < 0)
         error("ERROR on accept");
-    printf("Connection established!\n");
+    printf("Connection established with %d\n", cli_addr);
     while (1)
     {
         bzero(buffer, 256);
