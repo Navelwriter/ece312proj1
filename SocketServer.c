@@ -2,6 +2,11 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <string.h>
+#include <stdlib.h>
+#include <pthread.h>
+#define BUF_SIZE 256
+#define CLADDR_LEN 100
 
 void error(char *msg)
 {
@@ -9,12 +14,59 @@ void error(char *msg)
     exit(1);
 }
 
+void *receiveMessage(void *socket)
+{ // the thread function
+    int sockfd, ret;
+    char buffer[BUF_SIZE];
+    sockfd = (int)socket;
+    memset(buffer, 0, BUF_SIZE);
+    if (write(sockfd, "I'm waiting for message", 23) < 0)
+        error("ERROR writing to socket");
+
+    while ((ret = read(sockfd, buffer, BUF_SIZE)) > 0)
+    {
+        printf("\n%s", buffer);
+        printf("\nPlease enter the message: ");
+    }
+    if (ret < 0)
+        printf("Error receiving data!\n");
+    else
+        printf("Closing connection\n");
+    
+    close(sockfd);
+}
+
+// create a thread function to send a message to the client
+void *sendMessage(void *socket)
+{
+    int sockfd, ret;
+    char buffer[BUF_SIZE];
+    sockfd = (int)socket;
+
+    while (1)
+    {
+        printf("\nPlease enter the message: ");
+        memset(buffer, 0, BUF_SIZE);
+        fgets(buffer, BUF_SIZE, stdin);
+
+        if (buffer[0] == 'e' && buffer[1] == 'x' && buffer[2] == 'i' && buffer[3] == 't')
+            break;
+
+        ret = write(sockfd, buffer, BUF_SIZE);
+        if (ret < 0)
+            error("ERROR writing to socket");
+    }
+    close(sockfd);
+}
+
 int main(int argc, char *argv[])
 {
     int sockfd, newsockfd, portno, clilen;
-    char buffer[256], username[256], message[256];
+    char buffer[BUF_SIZE], username[BUF_SIZE], message[BUF_SIZE], clientAddr[CLADDR_LEN];
     struct sockaddr_in serv_addr, cli_addr;
-    int n;
+    pid_t childpid;
+    pthread_t send, receive;
+    int ret, n;
     if (argc < 2)
     {
         fprintf(stderr, "ERROR, no port provided\n");
@@ -31,42 +83,35 @@ int main(int argc, char *argv[])
     printf("Enter username: ");
     bzero(username, 256);        // clear the buffer
     fgets(username, 255, stdin); // get username from user
-    printf("Waiting for a connection...\n");
     int length = strlen(username);
-    if (bind(sockfd, (struct sockaddr *)&serv_addr,
-             sizeof(serv_addr)) < 0)
+    if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
         error("ERROR on binding");
+    printf("Waiting for a connection...\n");
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
-    newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
-    if (newsockfd < 0)
-        error("ERROR on accept");
-    printf("Connection established with %d\n", cli_addr);
-    while (1)
-    {
-        bzero(buffer, 256);
-        n = read(newsockfd, buffer, 255);
-        if (n < 0)
-            error("ERROR reading from socket");
-        printf("%s\n", buffer);
-        printf("Please enter the message: ");
-        bzero(buffer, 256);
-        fgets(buffer, 255, stdin);
-        if (buffer[0] == 'e' && buffer[1] == 'x' && buffer[2] == 'i' && buffer[3] == 't')
-        {
-            break;
-        }
-        // make message buffer a combination of username and message in the format "username: message" in the same line
-        strcpy(message, username);
-        message[length - 1] = ':';
-        message[length] = ' ';
-        strcpy(message + length + 1, buffer);
+    bzero(buffer, 256);
 
-        // send message to client
-        n = write(newsockfd, message, strlen(message));
-        if (n < 0)
-            error("ERROR writing to socket");
-        bzero(buffer, 256);
+    // create a thread to send a message as well as receive a message from the client in a non-blocking way
+    // in a loop so that the server can send and receive messages at the same time
+    while (newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen)) 
+    {
+        inet_ntop(AF_INET, &(cli_addr.sin_addr), clientAddr, CLADDR_LEN); // convert the client address to a string
+        if (newsockfd < 0)
+            error("ERROR on accept");
+        printf("Connection accepted from %s...\n", clientAddr);
+        if (ret = pthread_create(&send, NULL, sendMessage, (void *)newsockfd) != 0)
+        {
+            printf("ERROR: Thread cannot be created: %s\n", strerror(ret));
+            error("ERROR on accept");
+        }
+        if (ret = pthread_create(&receive, NULL, receiveMessage, (void *)newsockfd) != 0)
+        {
+            printf("ERROR: Thread cannot be created: %s\n", strerror(ret));
+            error("ERROR on accept");
+        }
     }
+    close(newsockfd);
+    close(sockfd);
+
     return 0;
 }
