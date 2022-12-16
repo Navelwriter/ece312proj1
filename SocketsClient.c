@@ -9,6 +9,7 @@
 int contin = 1;
 char buffer[256], username[256], message[256];
 int sockfd, portno, n;
+int length;
 
 void error(char *msg)
 {
@@ -20,6 +21,7 @@ void * receiveMessage(void * socket){
     int ret;
     while((ret = read(sockfd, buffer, 256)) > 0){
         n = read(sockfd, buffer, 255);
+        printf("\n");
         if (n < 0)
             error("ERROR reading from socket");
         printf("%s\n", buffer);
@@ -28,7 +30,7 @@ void * receiveMessage(void * socket){
 
 void * sendMessage(void * socket){
     while(1){
-        printf("Please enter the message: ");
+        printf("%s: ", username);
         bzero(buffer, 256);
         fgets(buffer, 255, stdin);
         if (buffer[0] == 'e' && buffer[1] == 'x' && buffer[2] == 'i' && buffer[3] == 't')
@@ -37,7 +39,6 @@ void * sendMessage(void * socket){
         }
         // make message buffer a combination of username and message in the format "username: message" in the same line
         strcpy(message, username);
-        int length = strlen(username);
         message[length - 1] = ':';
         message[length] = ' ';
         strcpy(message + length + 1, buffer);
@@ -83,7 +84,8 @@ int main(int argc, char *argv[])
     printf("Enter username: ");
     bzero(username, 256); // clear the buffer
     fgets(username, 255, stdin); // get username from user
-    int length = strlen(username);
+    length = strlen(username);
+    username[length - 1] = NULL;
     // Loop until the user enters an empty message
     pthread_t rThread, sThread;
     
