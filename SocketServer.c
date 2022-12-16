@@ -1,3 +1,11 @@
+/*
+* SocketsServer.c
+* Created by Noah Lee and Clark Ren
+* This is the server side of the chat program,
+* it will create a socket and wait for a client to connect
+* Once a client connects, it will allow the user to send and receive messages
+*/
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -76,15 +84,14 @@ int main(int argc, char *argv[])
         error("ERROR opening socket");
     bzero((char *)&serv_addr, sizeof(serv_addr));
     portno = atoi(argv[1]);
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(portno);
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_family = AF_INET;        // use the Internet address family
+    serv_addr.sin_port = htons(portno); // convert the port number to network byte order
+    serv_addr.sin_addr.s_addr = INADDR_ANY; // use the IP address of the server
     printf("Enter username: ");
     bzero(username, 256);        // clear the buffer
     fgets(username, 255, stdin); // get username from user
     int length = strlen(username);
-    // removes the newline character from the username string by replacing it with a null character
-    username[length - 1] = '\0';
+    username[length - 1] = '\0'; // remove the newline character from the username
     if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
         error("ERROR on binding");
     printf("Waiting for a connection...\n");
@@ -92,27 +99,25 @@ int main(int argc, char *argv[])
     clilen = sizeof(cli_addr);
     bzero(buffer, 256);
 
-    // create a thread to send a message as well as receive a message from the client in a non-blocking way
-    // in a loop so that the server can send and receive messages at the same time
-    if (newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen))
+    if (newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen))  // accept a connection from a client
     {
         inet_ntop(AF_INET, &(cli_addr.sin_addr), clientAddr, CLADDR_LEN); // convert the client address to a string
         if (newsockfd < 0)
             error("ERROR on accept");
         printf("Connection accepted from %s...\n", clientAddr);
-        if (ret = pthread_create(&send, NULL, sendMessage, (void *)newsockfd) != 0)
+        if (ret = pthread_create(&send, NULL, sendMessage, (void *)newsockfd) != 0) // create a thread to send a message to the client
         {
             printf("ERROR: Thread cannot be created: %s\n", strerror(ret));
             error("ERROR on accept");
         }
-        if (ret = pthread_create(&receive, NULL, receiveMessage, (void *)newsockfd) != 0)
+        if (ret = pthread_create(&receive, NULL, receiveMessage, (void *)newsockfd) != 0) // create a thread to receive a message from the client
         {
             printf("ERROR: Thread cannot be created: %s\n", strerror(ret));
             error("ERROR on accept");
         }
     }
 
-    while (cont)
+    while (cont) 
     {
     }
 

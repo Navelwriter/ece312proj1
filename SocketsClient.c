@@ -1,3 +1,11 @@
+/*
+* SocketsClient.c
+* Created by Noah Lee and Clark Ren
+* This is the client side of the chat program, 
+* it will connect to the server and allow the user to send and receive messages
+*/
+
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -43,7 +51,7 @@ void * sendMessage(void * socket){
         message[length - 1] = ':';
         message[length] = ' ';
         strcpy(message + length + 1, buffer);
-        n = write(sockfd, message, strlen(message));
+        n = write(sockfd, message, strlen(message)); // send the message to the server
         if (n < 0)
             error("ERROR writing to socket");
         bzero(buffer, 256);
@@ -60,11 +68,11 @@ int main(int argc, char *argv[])
         fprintf(stderr, "usage %s hostname port\n", argv[0]);
         exit(0);
     }
-    portno = atoi(argv[2]);
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    portno = atoi(argv[2]); // get the port number
+    sockfd = socket(AF_INET, SOCK_STREAM, 0); // create a socket
     if (sockfd < 0)
         error("ERROR opening socket");
-    server = gethostbyname(argv[1]);
+    server = gethostbyname(argv[1]); // get the host name
     if (server == NULL)
     {
         fprintf(stderr, "ERROR, no such host\n");
@@ -74,7 +82,7 @@ int main(int argc, char *argv[])
     serv_addr.sin_family = AF_INET;
     bcopy((char *)server->h_addr,
           (char *)&serv_addr.sin_addr.s_addr,
-          server->h_length);
+          server->h_length); // copy the host name to the server address
     serv_addr.sin_port = htons(portno);
 
     int newsockfd;
@@ -91,11 +99,11 @@ int main(int argc, char *argv[])
     pthread_t rThread, sThread;
     
     int rec, send;
-    if (rec = pthread_create(&rThread, NULL, receiveMessage, (void *) newsockfd)) {
+    if (rec = pthread_create(&rThread, NULL, receiveMessage, (void *) newsockfd)) { // create a thread to receive messages from the server
         printf("ERROR: Return Code from pthread_create() is %d\n", rec);
         error("ERROR creating thread");
     }
-    if (send = pthread_create(&sThread, NULL, sendMessage, (void *) newsockfd)) {
+    if (send = pthread_create(&sThread, NULL, sendMessage, (void *) newsockfd)) { // create a thread to send messages to the server
         printf("ERROR: Return Code from pthread_create() is %d\n", send);
         error("ERROR creating thread");
     }
