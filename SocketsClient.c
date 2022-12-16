@@ -19,14 +19,19 @@ void error(char *msg)
 
 void * receiveMessage(void * socket){
     int ret;
-    while((ret = read(sockfd, buffer, 256)) > 0){
-        n = read(sockfd, buffer, 255);
+    while((ret = read(sockfd, buffer, 256)) > 0){ 
         printf("\n");
-        if (n < 0)
-            error("ERROR reading from socket");
+        buffer[ret] = '\0';
         printf("%s\n", buffer);
     }
+    if (ret < 0)
+        error("ERROR reading from socket");
+    else{
+        printf("Closing connection\n");
+        contin = 0;
+    }
 }
+
 
 void * sendMessage(void * socket){
     while(1){
@@ -36,6 +41,8 @@ void * sendMessage(void * socket){
         if (buffer[0] == 'e' && buffer[1] == 'x' && buffer[2] == 'i' && buffer[3] == 't')
         {
             contin = 0;
+            write("\nClosing connection...", 23);
+            break;
         }
         // make message buffer a combination of username and message in the format "username: message" in the same line
         strcpy(message, username);
@@ -73,8 +80,8 @@ int main(int argc, char *argv[])
     serv_addr.sin_family = AF_INET;
     bcopy((char *)server->h_addr,
           (char *)&serv_addr.sin_addr.s_addr,
-          server->h_length);
-    serv_addr.sin_port = htons(portno);
+          server->h_length); 
+    serv_addr.sin_port = htons(portno); 
 
     int newsockfd;
     if (newsockfd = connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))){

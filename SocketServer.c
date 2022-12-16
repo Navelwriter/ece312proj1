@@ -26,13 +26,17 @@ void *receiveMessage(void *socket)
 
     while ((ret = read(sockfd, buffer, BUF_SIZE)) > 0)
     {
+        printf("\n");
         buffer[ret] = '\0';
         printf("%s", buffer);
     }
     if (ret < 0)
         printf("Error receiving data!\n");
-    else
+    else{
         printf("Closing connection\n");
+        cont = 0;
+        }
+
 
     close(sockfd);
 }
@@ -56,6 +60,7 @@ void *sendMessage(void *socket)
         if (buffer[0] == 'e' && buffer[1] == 'x' && buffer[2] == 'i' && buffer[3] == 't')
         {
             cont = 0;
+            write("\nClosing connection...", 23);
             break;
         }
 
@@ -101,7 +106,7 @@ int main(int argc, char *argv[])
 
     // create a thread to send a message as well as receive a message from the client in a non-blocking way
     // in a loop so that the server can send and receive messages at the same time
-    while (newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen))
+    if (newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen))
     {
         inet_ntop(AF_INET, &(cli_addr.sin_addr), clientAddr, CLADDR_LEN); // convert the client address to a string
         if (newsockfd < 0)
@@ -118,7 +123,10 @@ int main(int argc, char *argv[])
             error("ERROR on accept");
         }
     }
-    while(cont){}
+
+    while (cont)
+    {
+    }
     close(newsockfd);
     close(sockfd);
 
