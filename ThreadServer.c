@@ -9,7 +9,7 @@
 #include <netinet/in.h>
 #include <pthread.h>
 
-#define PORT 4560
+#define PORT 4562
 #define BUF_SIZE 256
 #define CLADDR_LEN 100
 
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
             error("ERROR creating thread");
         }
         // prompt user for message without breaking the connection 
-        else if()
+        // else if()
 
         printf("Please enter the message: ");
         bzero(buffer, 256);
