@@ -8,6 +8,7 @@
 #define BUF_SIZE 256
 #define CLADDR_LEN 100
 char buffer[BUF_SIZE], username[BUF_SIZE], message[BUF_SIZE], clientAddr[CLADDR_LEN];
+int cont = 1;
 
 void error(char *msg)
 {
@@ -25,13 +26,14 @@ void *receiveMessage(void *socket)
 
     while ((ret = read(sockfd, buffer, BUF_SIZE)) > 0)
     {
+        buffer[ret] = '\0';
         printf("%s", buffer);
     }
     if (ret < 0)
         printf("Error receiving data!\n");
     else
         printf("Closing connection\n");
-    
+
     close(sockfd);
 }
 
@@ -40,20 +42,22 @@ void *sendMessage(void *socket)
 {
     int sockfd, ret;
     sockfd = (int)socket;
-
     while (1)
     {
         printf("%s: ", username);
-        memset(buffer, 0, BUF_SIZE); 
+        memset(buffer, 0, BUF_SIZE);
         memset(message, 0, BUF_SIZE);
-        fgets(buffer, BUF_SIZE, stdin);  
-        //write the username to the beginning of the message
+        fgets(buffer, BUF_SIZE, stdin);
+        // write the username to the beginning of the message
         strcpy(message, username); // copy the username to the message
-        strcat(message, ": ");    // add a colon and a space to the message
+        strcat(message, ": ");     // add a colon and a space to the message
         strcat(message, buffer);   // add the message to the message
         message[strlen(message) - 1] = '\0';
         if (buffer[0] == 'e' && buffer[1] == 'x' && buffer[2] == 'i' && buffer[3] == 't')
+        {
+            cont = 0;
             break;
+        }
 
         ret = write(sockfd, message, BUF_SIZE);
         if (ret < 0)
@@ -86,7 +90,7 @@ int main(int argc, char *argv[])
     bzero(username, 256);        // clear the buffer
     fgets(username, 255, stdin); // get username from user
     int length = strlen(username);
-    //removes the newline character from the username string by replacing it with a null character
+    // removes the newline character from the username string by replacing it with a null character
     username[length - 1] = '\0';
     if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
         error("ERROR on binding");
@@ -97,7 +101,7 @@ int main(int argc, char *argv[])
 
     // create a thread to send a message as well as receive a message from the client in a non-blocking way
     // in a loop so that the server can send and receive messages at the same time
-    while (newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen)) 
+    while (newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen))
     {
         inet_ntop(AF_INET, &(cli_addr.sin_addr), clientAddr, CLADDR_LEN); // convert the client address to a string
         if (newsockfd < 0)
@@ -114,6 +118,7 @@ int main(int argc, char *argv[])
             error("ERROR on accept");
         }
     }
+    while(cont){}
     close(newsockfd);
     close(sockfd);
 
