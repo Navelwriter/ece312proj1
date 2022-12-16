@@ -20,22 +20,17 @@ void *receiveMessage(void *socket)
 { // the thread function
     int sockfd, ret;
     sockfd = (int)socket;
-    memset(buffer, 0, BUF_SIZE);
-    if (write(sockfd, "I'm waiting for message", 23) < 0)
-        error("ERROR writing to socket");
-
-    while ((ret = read(sockfd, buffer, BUF_SIZE)) > 0)
-    {
+    while((ret = read(sockfd, buffer, 256)) > 0){ 
         printf("\n");
         buffer[ret] = '\0';
-        printf("%s", buffer);
+        printf("%s\n", buffer);
     }
     if (ret < 0)
-        printf("Error receiving data!\n");
+        error("ERROR reading from socket");
     else{
         printf("Closing connection\n");
         cont = 0;
-        }
+    }
 
 
     close(sockfd);
@@ -59,8 +54,8 @@ void *sendMessage(void *socket)
         message[strlen(message) - 1] = '\0';
         if (buffer[0] == 'e' && buffer[1] == 'x' && buffer[2] == 'i' && buffer[3] == 't')
         {
-            cont = 0;
             write("\nClosing connection...", 23);
+            cont = 0;
             break;
         }
 
@@ -127,8 +122,6 @@ int main(int argc, char *argv[])
     while (cont)
     {
     }
-    close(newsockfd);
-    close(sockfd);
 
     return 0;
 }
