@@ -20,19 +20,12 @@ void *receiveMessage(void *socket)
 { // the thread function
     int sockfd, ret;
     sockfd = (int)socket;
-    while((ret = read(sockfd, buffer, 256)) > 0){ 
-        printf("\n");
-        buffer[ret] = '\0';
-        printf("%s\n", buffer);
+    while((ret = read(sockfd, buffer, 256)) > 0){
+        n = read(sockfd, buffer, 255);
+        if (n < 0)
+            error("ERROR reading from socket");
+        printf("\n%s\n", buffer);
     }
-    if (ret < 0)
-        error("ERROR reading from socket");
-    else{
-        printf("Closing connection\n");
-        cont = 0;
-    }
-
-
     close(sockfd);
 }
 
