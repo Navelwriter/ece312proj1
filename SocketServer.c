@@ -7,6 +7,7 @@
 #include <pthread.h>
 #define BUF_SIZE 256
 #define CLADDR_LEN 100
+char buffer[BUF_SIZE], username[BUF_SIZE], message[BUF_SIZE], clientAddr[CLADDR_LEN];
 
 void error(char *msg)
 {
@@ -17,7 +18,6 @@ void error(char *msg)
 void *receiveMessage(void *socket)
 { // the thread function
     int sockfd, ret;
-    char buffer[BUF_SIZE];
     sockfd = (int)socket;
     memset(buffer, 0, BUF_SIZE);
     if (write(sockfd, "I'm waiting for message", 23) < 0)
@@ -25,8 +25,7 @@ void *receiveMessage(void *socket)
 
     while ((ret = read(sockfd, buffer, BUF_SIZE)) > 0)
     {
-        printf("\n%s", buffer);
-        printf("\nPlease enter the message: ");
+        printf("%s", buffer);
     }
     if (ret < 0)
         printf("Error receiving data!\n");
@@ -40,19 +39,23 @@ void *receiveMessage(void *socket)
 void *sendMessage(void *socket)
 {
     int sockfd, ret;
-    char buffer[BUF_SIZE];
     sockfd = (int)socket;
 
     while (1)
     {
-        printf("\nPlease enter the message: ");
-        memset(buffer, 0, BUF_SIZE);
-        fgets(buffer, BUF_SIZE, stdin);
-
+        printf("%s: ", username);
+        memset(buffer, 0, BUF_SIZE); 
+        memset(message, 0, BUF_SIZE);
+        fgets(buffer, BUF_SIZE, stdin);  
+        //write the username to the beginning of the message
+        strcpy(message, username); // copy the username to the message
+        strcat(message, ": ");    // add a colon and a space to the message
+        strcat(message, buffer);   // add the message to the message
+        message[strlen(message) - 1] = '\0';
         if (buffer[0] == 'e' && buffer[1] == 'x' && buffer[2] == 'i' && buffer[3] == 't')
             break;
 
-        ret = write(sockfd, buffer, BUF_SIZE);
+        ret = write(sockfd, message, BUF_SIZE);
         if (ret < 0)
             error("ERROR writing to socket");
     }
@@ -62,7 +65,6 @@ void *sendMessage(void *socket)
 int main(int argc, char *argv[])
 {
     int sockfd, newsockfd, portno, clilen;
-    char buffer[BUF_SIZE], username[BUF_SIZE], message[BUF_SIZE], clientAddr[CLADDR_LEN];
     struct sockaddr_in serv_addr, cli_addr;
     pid_t childpid;
     pthread_t send, receive;
@@ -84,6 +86,8 @@ int main(int argc, char *argv[])
     bzero(username, 256);        // clear the buffer
     fgets(username, 255, stdin); // get username from user
     int length = strlen(username);
+    //removes the newline character from the username string by replacing it with a null character
+    username[length - 1] = '\0';
     if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
         error("ERROR on binding");
     printf("Waiting for a connection...\n");
